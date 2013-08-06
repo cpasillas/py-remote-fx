@@ -12,27 +12,21 @@ parser.add_option('-v', '--volume', dest='volume', default=1,
 (options, args) = parser.parse_args(sys.argv)
 print 'Volume = %s' % str(options.volume)
 
-# Stephen's Mac
-path_to_audio = '/Users/Stephen/Hideo/'
+audio_path = '/Users/Stephen/Hideo/'
 audio_command = ('afplay',)
-filenames = {'/rifle': 'Rifle Shot.wav',
-             '/pistol': 'Pistol Shot.wav'}
+guns = {'rifle': 'Rifle Shot.wav',
+        'pistol': 'Pistol Shot.wav'}
 ricochet_name = 'Rico & Whiz By Single 0%d.wav'
 cat_noise = 'angry4.wav'
-angry_shot = 10
 shots_fired = 0
-
-# My desktop
-# path_to_audio = 'D:/hideo-dev/fx'
-# audio_command = ('d:/hideo-dev/fx/swavplayer.exe',)
-# filenames = {'/pistol': 'barreta_m9-Dion_Stapper-1010051237.wav',
-             # '/rifle': 'Shotgun_Blast-Jim_Rogers-1914772763.wav'}
 
 
 class Handler(bhs.BaseHTTPRequestHandler):
   def Play(self, filename, sleep):
     time.sleep(sleep)
-    command = audio_command + (filename, '-v', str(options.volume))
+    file_path = '%s/%s' % (audio_path, filename)
+    print 'Playing sound %s' % file_path 
+    command = audio_command + (file_path, '-v', str(options.volume))
     subprocess.Popen(command)
 
   def RandomRicochet(self):
@@ -44,22 +38,24 @@ class Handler(bhs.BaseHTTPRequestHandler):
   def Ricochet(self, sleep=0.8):
     self.Play(self.RandomRicochet(), sleep)
 
+  def Shoot(self, type):
+    if type not in guns:
+      return False
+    self.Play(guns[type], 0)
+    return True
+
   def do_GET(self):
-    if self.path not in filenames:
+    global shots_fired
+    gun_type = self.path[1:0]
+    shot_fired = self.Shoot(gun_type)
+    if not shot_fired:
       self.send_response(500, message='wtfmate?\n\n')
       return
-    audio_file = '%s/%s' % (path_to_audio, filenames[self.path])
-    print 'Playing sound %s' % audio_file
-    command_tuple = audio_command + (audio_file,)
-    subprocess.Popen(command_tuple)
-    global shots_fired
     shots_fired += 1
     if shots_fired == 1:
       self.Ricochet()
       self.AngerCat()  
-      self.send_response(200, message='pwnage\n\n')
-      return
-    if 'pistol' in self.path:
+    elif 'pistol' in self.path:
       if random.random() < 0.5:
         self.Ricochet()  
     self.send_response(200, message='pwnage\n\n')
