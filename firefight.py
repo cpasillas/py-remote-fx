@@ -9,11 +9,21 @@ import ConfigParser
 parser = optparse.OptionParser()
 parser.add_option('-v', '--volume', dest='volume', default=1,
                   help='Set volume')
+parser.add_option('-c', '--config', dest='config', default='ff.cfg',
+                  help='Relative path to a config file')
 (options, args) = parser.parse_args(sys.argv)
+
 print 'Volume = %s' % str(options.volume)
 
 config = ConfigParser.RawConfigParser()
-config.read('ff.cfg')
+
+try:
+  with open(options.config): pass
+  print 'Using config file: %s' % options.config
+  config.read(options.config)
+except IOError:
+  print 'ERROR: Could not find config file: %s' % options.config
+
 audio_path = config.get('ff','audio_path')
 audio_command = (config.get('ff','audio_command'),)
 guns = {'rifle': config.get('guns','rifle'),
@@ -34,7 +44,7 @@ class Handler(bhs.BaseHTTPRequestHandler):
       with open(file_path): pass
       self.PlaySound(file_path)
     except IOError:
-      print 'Could not find sound file: %s' % file_path
+      print 'ERROR: Could not find sound file: %s' % file_path
 
 
   def PlaySound(self, file_path):
