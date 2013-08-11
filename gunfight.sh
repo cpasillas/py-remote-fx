@@ -12,6 +12,7 @@ OPTIONS:
    -h, -?    Show this message
    -v INT    Volume, INT is an integer
    -c FILE   Path to config file (e.g. /home/me/myconfig.cfg)
+   -w        Rely on user to open admin command prompt in Windows
 EOF
 }
 
@@ -21,7 +22,7 @@ OPTIND=1         # Reset in case getopts has been used previously in the shell.
 # Initialize our own variables:
 volume=1
 
-while getopts "h?v:c:" opt; do
+while getopts "h?v:c:w?" opt; do
     case "$opt" in
     h|\?)
         show_help
@@ -31,19 +32,28 @@ while getopts "h?v:c:" opt; do
         ;;
     c)  config_file=$OPTARG
         ;;
+    w)  win7=1
+        ;;
     esac
 done
 
 shift $((OPTIND-1))
 
+if [ -z $config_file ]
+then
+  echo "Config file must be specified with -c"
+  exit 1
+fi
+
 [ "$1" = "--" ] && shift
 
-echo "volume=$volume, config_file='$config_file', Leftovers: $@"
+echo "volume=$volume, config_file='$config_file', win7=$win7, Leftovers: $@"
+command="python firefight.py -v $volume -c $config_file"
 
 # End of file
-if [ $config_file ]
+if [ $win7 ]
 then
-    sudo python firefight.py -v $volume -c $config_file
+  $command
 else
-    sudo python firefight.py -v $volume
+  sudo $command
 fi
