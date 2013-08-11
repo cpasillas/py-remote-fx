@@ -47,8 +47,9 @@ fi
 
 [ "$1" = "--" ] && shift
 
-echo "volume=$volume, config_file='$config_file', win7=$win7, Leftovers: $@"
+echo "Leftover args: $@"
 command="python firefight.py -v $volume -c $config_file"
+echo "Running command: $command"
 
 # End of file
 if [ $win7 ]
